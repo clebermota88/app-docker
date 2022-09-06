@@ -1,0 +1,60 @@
+version: '3.9'
+
+networks:
+  net_filmes:
+    driver: bridge
+  
+services:
+
+  web:
+    build: ./
+    restart: always
+    container_name: web
+    environment:
+      MONGODB_HOST: 'mongodb'
+      MONGODB_USERNAME: ${MONGO_USERNAME}
+      MONGODB_PASSWORD: ${MONGO_ROOT_PASSWORD}
+    ports:
+      - 5000:5000
+    networks:
+      - net_filmes
+    depends_on:
+      - mongodb
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    restart: always
+    networks:
+      - net_filmes
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+    volumes:
+      - mongodb:/data/db
+    ports:
+      - 27017:27017
+
+  web-mongo-express:
+    image: mongo-express
+    container_name: web-mongo-express
+    ports: 
+      - 8081:8081
+    networks:
+      - net_filmes
+    depends_on:
+      - mongodb
+    environment:
+      ME_CONFIG_BASICAUTH_USERNAME: ${CONFIG_USERNAME}
+      ME_CONFIG_BASICAUTH_PASSWORD: ${CONFIG_PASSWORD}
+      ME_CONFIG_MONGODB_ENABLE_ADMIN: 'true'
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_USERNAME}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_ROOT_PASSWORD}
+      ME_CONFIG_MONGODB_PORT: 27017
+      ME_CONFIG_MONGODB_SERVER: 'mongodb'
+
+volumes:
+  mongodb:
+
+networks:
+  net_filmes:
